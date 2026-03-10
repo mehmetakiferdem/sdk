@@ -58,7 +58,18 @@ jobs:
         run: |
           mkdir -p "$GITHUB_WORKSPACE/.repos"
           python -m pip install vcstool
-          vcs import "$GITHUB_WORKSPACE/.repos" < ${{ github.workspace }}/repos.yml
+          max_retries=3
+          for i in $(seq 1 $max_retries); do
+            if vcs import "$GITHUB_WORKSPACE/.repos" < ${{ github.workspace }}/repos.yml; then
+              break
+            fi
+            if [ "$i" -eq "$max_retries" ]; then
+              echo "All $max_retries attempts failed."
+              exit 1
+            fi
+            echo "Attempt $i/$max_retries failed. Retrying in $((i * 15))s..."
+            sleep $((i * 15))
+          done
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
