@@ -3,12 +3,38 @@
 
 version: '3'
 
+vars:
+  ANDROID_RELEASE: '{{ .ANDROID_RELEASE | default "v11.00.00-t3-gem-o1" }}'
+  ANDROID_REPO: 'mehmetakiferdem/android-t3-gem'
+  ANDROID_DIR: '{{ .WORKDIR }}/build/android'
+  ANDROID_BOARD: 'am67a-t3-gem-o1'
+
 tasks:
 
-  fetch:
+  download:
+    desc: Download Android images for T3 Gem O1 from GitHub Releases
     cmds:
-      - echo todo
+      - mkdir -p {{ .ANDROID_DIR }}
+      - gh release download {{ .ANDROID_RELEASE }}
+          --repo {{ .ANDROID_REPO }}
+          --dir {{ .ANDROID_DIR }}
+          --skip-existing
+      - echo "Images downloaded to {{ .ANDROID_DIR }}"
 
-  build:
+  flash:
+    desc: Flash Android images to T3 Gem O1 (DFU → fastboot required)
     cmds:
-      - echo todo
+      - task: download
+      - chmod +x {{ .ANDROID_DIR }}/flashall.sh
+      - cd {{ .ANDROID_DIR }} && sudo ./flashall.sh --board {{ .ANDROID_BOARD }} --disable-avb
+    requires:
+      vars: [WORKDIR]
+
+  flash:bootloader:
+    desc: Flash bootloader only (tiboot3 + tispl + u-boot)
+    cmds:
+      - task: download
+      - chmod +x {{ .ANDROID_DIR }}/flashall.sh
+      - cd {{ .ANDROID_DIR }} && sudo ./flashall.sh --board {{ .ANDROID_BOARD }} --bootloader
+    requires:
+      vars: [WORKDIR]

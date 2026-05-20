@@ -95,9 +95,10 @@ apt-get install -y \
     kernel-module-videobuf2-v4l2-6.12.24-ti \
     kernel-module-virtio-rpmsg-bus-6.12.24-ti \
     kernel-module-wave5-6.12.24-ti \
-    kernel-module-wl18xx-6.12.24-ti \
-    kernel-module-wlcore-6.12.24-ti \
-    kernel-module-wlcore-sdio-6.12.24-ti \
+    kernel-module-rtw88-core-6.12.24-ti \
+    kernel-module-rtw88-8822c-6.12.24-ti \
+    kernel-module-rtw88-8822cs-6.12.24-ti \
+    kernel-module-rtw88-sdio-6.12.24-ti \
     kernel-module-xt-addrtype-6.12.24-ti \
     kernel-module-xt-conntrack-6.12.24-ti \
     kernel-module-xt-masquerade-6.12.24-ti \
