@@ -65,6 +65,35 @@ user@host:$ devbox shell
 
 [![asciicast](https://asciinema.org/a/KDwPPlCV2wxzpwDB4sLseW2X9.svg)](https://asciinema.org/a/KDwPPlCV2wxzpwDB4sLseW2X9)
 
+# Android (T3 Gem O1)
+
+> **Note:** MACHINE must be `t3-gem-o1`
+
+#### Method 1 — raw image (recommended, no fastboot required)
+
+Downloads pre-built images from GitHub Releases and creates a single raw disk image.
+Write it to eMMC or SD card with Gemstone Imager or `dd`.
+
+```bash
+🚀 distrobox:workdir> task android:build MACHINE=t3-gem-o1 WORKDIR=$PWD
+
+# Output: build/android/android-am67a-t3-gem-o1.img  (main eMMC image)
+#         build/android/android-am67a-t3-gem-o1-boot1.img  (tiboot3, write to mmcblk0boot1)
+```
+
+```bash
+# Flash with dd (from running Linux on the board or SD card boot)
+sudo dd if=build/android/android-am67a-t3-gem-o1.img of=/dev/mmcblk0 bs=4M status=progress
+echo 0 | sudo tee /sys/block/mmcblk0boot1/force_ro
+sudo dd if=build/android/android-am67a-t3-gem-o1-boot1.img of=/dev/mmcblk0boot1 bs=512 status=progress
+```
+
+#### Method 2 — fastboot (DFU → fastboot required)
+
+```bash
+🚀 distrobox:workdir> task android:flash MACHINE=t3-gem-o1 WORKDIR=$PWD
+```
+
 # Configuration of Kernel and U-Boot
 
 ```bash

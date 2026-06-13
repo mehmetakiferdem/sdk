@@ -1,0 +1,66 @@
+FROM ubuntu:22.04
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get update && \
+    apt-get upgrade -y && \
+    apt-get install -y \
+        bison \
+        build-essential \
+        ca-certificates \
+        ccache \
+        curl \
+        flex \
+        fontconfig \
+        g++-multilib \
+        gcc-multilib \
+        git \
+        gnupg \
+        lib32z1-dev \
+        libc6-dev-i386 \
+        libgl1-mesa-dev \
+        libncurses5-dev \
+        libssl-dev \
+        libx11-dev \
+        libxml2-utils \
+        locales \
+        lzop \
+        m4 \
+        nano \
+        ninja-build \
+        openjdk-17-jdk \
+        python3 \
+        python3-pip \
+        python-is-python3 \
+        repo \
+        rsync \
+        sudo \
+        unzip \
+        wget \
+        x11proto-core-dev \
+        xsltproc \
+        zip \
+        zlib1g-dev \
+    && locale-gen en_US.UTF-8
+
+ENV JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
+ENV PATH=$JAVA_HOME/bin:$PATH
+
+# GitHub CLI
+RUN curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg \
+        -o /usr/share/keyrings/githubcli-archive-keyring.gpg && \
+    echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" \
+        > /etc/apt/sources.list.d/github-cli.list && \
+    apt-get update && apt-get install -y gh
+
+# Allow minimum password length of image in Distrobox to be 1 character
+RUN sed -i 's/pam_unix\.so obscure/pam_unix.so minlen=1 obscure/' /etc/pam.d/common-password
+RUN echo gemstone-android > /etc/hostname
+
+# Taskfile
+RUN curl --location https://github.com/go-task/task/releases/download/v3.50.0/task_3.50.0_linux_amd64.deb \
+        --output ~/task_3.50.0_linux_amd64.deb && \
+    apt install ~/task_3.50.0_linux_amd64.deb && \
+    task --completion bash > /etc/bash_completion.d/task
+
+CMD ["bash"]

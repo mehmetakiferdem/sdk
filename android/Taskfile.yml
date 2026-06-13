@@ -7,34 +7,62 @@ vars:
   ANDROID_RELEASE: '{{ .ANDROID_RELEASE | default "v11.00.00-t3-gem-o1" }}'
   ANDROID_REPO: 'mehmetakiferdem/android-t3-gem'
   ANDROID_DIR: '{{ .WORKDIR }}/build/android'
-  ANDROID_BOARD: 'am67a-t3-gem-o1'
+  ANDROID_BOARD: 'am67a-{{ .MACHINE }}'
 
 tasks:
 
-  download:
-    desc: Download Android images for T3 Gem O1 from GitHub Releases
+  fetch:
+    desc: Download Android partition images from GitHub Releases
     cmds:
       - mkdir -p {{ .ANDROID_DIR }}
-      - gh release download {{ .ANDROID_RELEASE }}
-          --repo {{ .ANDROID_REPO }}
-          --dir {{ .ANDROID_DIR }}
-          --skip-existing
-      - echo "Images downloaded to {{ .ANDROID_DIR }}"
-
-  flash:
-    desc: Flash Android images to T3 Gem O1 (DFU → fastboot required)
-    cmds:
-      - task: download
-      - chmod +x {{ .ANDROID_DIR }}/flashall.sh
-      - cd {{ .ANDROID_DIR }} && sudo ./flashall.sh --board {{ .ANDROID_BOARD }} --disable-avb
+      - |
+        BASE_URL="https://github.com/{{ .ANDROID_REPO }}/releases/download/{{ .ANDROID_RELEASE }}"
+        for url in $(curl -sf "https://api.github.com/repos/{{ .ANDROID_REPO }}/releases/tags/{{ .ANDROID_RELEASE }}" \
+          | python3 -c "import sys,json; [print(a['browser_download_url']) for a in json.load(sys.stdin)['assets']]"); do
+          name=$(basename "$url")
+          if [ ! -f "{{ .ANDROID_DIR }}/$name" ]; then
+            echo "Downloading $name..."
+            curl -fL -o "{{ .ANDROID_DIR }}/$name" "$url"
+          fi
+        done
+      - echo "Images ready in {{ .ANDROID_DIR }}"
     requires:
       vars: [WORKDIR]
 
-  flash:bootloader:
-    desc: Flash bootloader only (tiboot3 + tispl + u-boot)
+  fetch-local:
+    desc: Sync Android partition images from a local AOSP build machine via rsync
     cmds:
-      - task: download
+      - mkdir -p {{ .ANDROID_DIR }}
+      - rsync -avz --ignore-existing {{ .AOSP_HOST }}:{{ .AOSP_IMG_DIR }}/{boot,super,userdata,vendor_boot,init_boot,vbmeta,vbmeta_vendor_dlkm,vbmeta_system_dlkm,dtbo,persist,metadata}.img {{ .ANDROID_DIR }}/
+      - rsync -avz {{ .AOSP_HOST }}:{{ .AOSP_BL_DIR }}/tiboot3-release-hsfs.bin {{ .ANDROID_DIR }}/tiboot3-{{ .ANDROID_BOARD }}-hsfs.bin
+      - rsync -avz {{ .AOSP_HOST }}:{{ .AOSP_BL_DIR }}/tispl-release.bin       {{ .ANDROID_DIR }}/tispl-{{ .ANDROID_BOARD }}.bin
+      - rsync -avz {{ .AOSP_HOST }}:{{ .AOSP_BL_DIR }}/u-boot-release.img      {{ .ANDROID_DIR }}/u-boot-{{ .ANDROID_BOARD }}.img
+      - echo "Images synced to {{ .ANDROID_DIR }}"
+    requires:
+      vars: [WORKDIR, AOSP_HOST, AOSP_IMG_DIR, AOSP_BL_DIR]
+
+  build:
+    desc: Create raw Android disk image (SD card or eMMC, no fastboot needed)
+    cmds:
+      - task: fetch
+      - chmod +x {{ .WORKDIR }}/android/create-image.sh
+      - sudo bash {{ .WORKDIR }}/android/create-image.sh
+          {{ .ANDROID_DIR }}
+          {{ .ANDROID_DIR }}
+          {{ .ANDROID_BOARD }}
+      - sudo chown $USER:$USER {{ .ANDROID_DIR }}/android-{{ .ANDROID_BOARD }}.img
+      - sudo chown $USER:$USER {{ .ANDROID_DIR }}/android-{{ .ANDROID_BOARD }}-boot1.img 2>/dev/null || true
+    requires:
+      vars:
+        - name: WORKDIR
+        - name: MACHINE
+          enum: [ t3-gem-o1 ]
+
+  flash:
+    desc: Flash Android images to T3 Gem O1 via DFU → fastboot
+    cmds:
+      - task: fetch
       - chmod +x {{ .ANDROID_DIR }}/flashall.sh
-      - cd {{ .ANDROID_DIR }} && sudo ./flashall.sh --board {{ .ANDROID_BOARD }} --bootloader
+      - cd {{ .ANDROID_DIR }} && sudo ./flashall.sh --board {{ .ANDROID_BOARD }} --disable-avb
     requires:
       vars: [WORKDIR]
