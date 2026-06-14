@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<labwc_config>
+
+<core>
+  <gap>4</gap>
+  <adaptiveSync>yes</adaptiveSync>
+</core>
+
+<theme>
+  <name>Clearlooks</name>
+  <cornerRadius>4</cornerRadius>
+</theme>
+
+<font place="ActiveWindow">
+  <name>Noto Sans</name>
+  <size>11</size>
+  <slant>Normal</slant>
+  <weight>Bold</weight>
+</font>
+<font place="InactiveWindow">
+  <name>Noto Sans</name>
+  <size>11</size>
+  <slant>Normal</slant>
+  <weight>Normal</weight>
+</font>
+
+<keyboard>
+  <default/>
+  <!-- App launcher -->
+  <keybind key="Super_L">
+    <action name="Execute">
+      <command>fuzzel</command>
+    </action>
+  </keybind>
+  <keybind key="Super-r">
+    <action name="Execute">
+      <command>fuzzel</command>
+    </action>
+  </keybind>
+  <!-- Terminal -->
+  <keybind key="Super-Return">
+    <action name="Execute">
+      <command>foot</command>
+    </action>
+  </keybind>
+  <!-- File manager -->
+  <keybind key="Super-e">
+    <action name="Execute">
+      <command>thunar</command>
+    </action>
+  </keybind>
+  <!-- Screenshot -->
+  <keybind key="Print">
+    <action name="Execute">
+      <command>sh -c "grim ~/Pictures/screenshot-$(date +%Y%m%d-%H%M%S).png"</command>
+    </action>
+  </keybind>
+  <!-- Window management -->
+  <keybind key="Super-F4">
+    <action name="Close"/>
+  </keybind>
+  <keybind key="Alt-F4">
+    <action name="Close"/>
+  </keybind>
+  <keybind key="Super-Up">
+    <action name="SnapToEdge"><direction>up</direction></action>
+  </keybind>
+  <keybind key="Super-Down">
+    <action name="SnapToEdge"><direction>down</direction></action>
+  </keybind>
+  <keybind key="Super-Left">
+    <action name="SnapToEdge"><direction>left</direction></action>
+  </keybind>
+  <keybind key="Super-Right">
+    <action name="SnapToEdge"><direction>right</direction></action>
+  </keybind>
+  <keybind key="Super-f">
+    <action name="ToggleFullscreen"/>
+  </keybind>
+  <keybind key="Super-d">
+    <action name="ToggleShowDesktop"/>
+  </keybind>
+  <keybind key="Alt-Tab">
+    <action name="NextWindow"/>
+  </keybind>
+</keyboard>
+
+<mouse>
+  <default/>
+  <context name="Root">
+    <mousebind button="Right" action="Press">
+      <action name="ShowMenu"><menu>root-menu</menu></action>
+    </mousebind>
+  </context>
+</mouse>
+
+<libinput>
+  <device category="touchpad">
+    <tap>yes</tap>
+    <naturalScroll>yes</naturalScroll>
+  </device>
+</libinput>
+
+</labwc_config>

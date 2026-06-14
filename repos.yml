@@ -35,6 +35,11 @@ repositories:
     url: https://github.com/t3gemstone/meta-gemstone.git
     version: 6b5c1587233735c2ac3e70b8ce214f195f50aa8c
 
+  yocto/meta-wayland:
+    type: git
+    url: https://codeberg.org/flk/meta-wayland.git
+    version: 25850e97205eaa1b54882197ceaa6814c0403b4a
+
   src/ti-img-rogue-umlibs:
     type: git
     url: https://git.ti.com/git/graphics/ti-img-rogue-umlibs.git

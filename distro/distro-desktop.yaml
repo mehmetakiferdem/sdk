@@ -24,35 +24,23 @@ actions:
     packages:
       - atril
       - catfish
-      - libxfce4ui-utils
-      - lightdm
-      - lightdm-gtk-greeter
+      - foot
       - mousepad
       - network-manager
       - parole
       - ristretto
       - thunar
       - thunar-archive-plugin
-      - xfce4-appfinder
-      - xfce4-indicator-plugin
-      - xfce4-panel
-      - xfce4-pulseaudio-plugin
-      - xfce4-session
-      - xfce4-settings
-      - xfce4-taskmanager
-      - xfce4-terminal
-      - xfce4-xkb-plugin
-      - xfconf
-      - xfdesktop4
-      - xfwm4
-      - xterm
+      - waybar
+      - wl-clipboard
+      - xwayland
 
   - action: apt
     recommends: false
     packages:
       - at-spi2-core
       - baobab
-      - dbus-x11
+      - dbus-user-session
       - engrampa
       - fonts-inter
       - fonts-inter-variable
@@ -61,14 +49,31 @@ actions:
       - kmscube
       - libdrm-dev
       - mate-calc
+      - mako-notifier
       - network-manager-gnome
       - whiptail
-      - xcape
+      - xdg-desktop-portal-gtk
+      - xdg-utils
 
 {{ if ne $suite "yirmibes" }}
   - action: apt
     recommends: false
     packages: [ software-properties-common ]
+{{ end }}
+
+{{ if eq $suite "noble" "bookworm" "yirmibes" }}
+  - action: apt
+    recommends: false
+    packages:
+      - fuzzel
+      - greetd
+{{ end }}
+
+{{ if eq $suite "noble" "yirmibes" }}
+  - action: apt
+    recommends: false
+    packages:
+      - labwc
 {{ end }}
 
   - action: run
@@ -119,5 +124,15 @@ actions:
     command: |
       gtk-update-icon-cache --force --ignore-theme-index /usr/share/icons/T3-Gemstone
       gtk-update-icon-cache --force --ignore-theme-index /usr/share/icons/hicolor
+
+{{ if eq $suite "noble" "yirmibes" }}
+  - action: run
+    description: Enable greetd display manager
+    chroot: true
+    command: |
+      systemctl enable greetd
+      systemctl disable lightdm 2>/dev/null || true
+      chmod +x /etc/skel/.config/labwc/autostart
+{{ end }}
 
 {{ end }}
