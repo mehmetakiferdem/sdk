@@ -1,0 +1,18 @@
+#!/bin/sh
+
+# Set wallpaper
+if command -v swaybg >/dev/null 2>&1; then
+    swaybg -m fill -i /usr/share/backgrounds/t3-gemstone/t3-gemstone-teknofest.jpg &
+fi
+
+# Panel
+waybar &
+
+# Notifications
+mako &
+
+# Network Manager tray
+nm-applet --indicator &
+
+# XDG autostart
+dex --autostart --environment labwc &

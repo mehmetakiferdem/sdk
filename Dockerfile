@@ -108,6 +108,18 @@ RUN apt-get install -y \
         systemd-container \
         ubuntu-keyring
 
+# Fetch latest Debian archive keys (new key added May 2026)
+RUN gpg --keyserver hkps://keyserver.ubuntu.com \
+        --recv-keys \
+          4D64FEC119C2029067D6E791F8D2585B8783D481 \
+          B8E5F13176D2A7A75220028078DBA3BC47EF2265 \
+          4CB50190207B4758A3F73A796ED0E7B82643E131 && \
+    gpg --export \
+          4D64FEC119C2029067D6E791F8D2585B8783D481 \
+          B8E5F13176D2A7A75220028078DBA3BC47EF2265 \
+          4CB50190207B4758A3F73A796ED0E7B82643E131 \
+    | tee -a /usr/share/keyrings/debian-archive-keyring.gpg > /dev/null
+
 # Android image requirements
 RUN apt-get install -y \
         android-sdk-libsparse-utils \

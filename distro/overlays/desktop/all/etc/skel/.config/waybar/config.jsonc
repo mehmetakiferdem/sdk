@@ -1,0 +1,117 @@
+{
+    "layer": "top",
+    "position": "bottom",
+    "height": 46,
+    "spacing": 0,
+    "modules-left": [
+        "custom/menu",
+        "custom/sep",
+        "custom/filemanager",
+        "custom/terminal",
+        "custom/vscode",
+        "custom/browser",
+        "custom/mousepad",
+        "custom/taskmanager",
+        "custom/settings",
+        "custom/sep2",
+        "wlr/taskbar"
+    ],
+    "modules-center": [],
+    "modules-right": [
+        "keyboard-state",
+        "tray",
+        "pulseaudio",
+        "custom/sep3",
+        "clock",
+        "custom/showdesktop"
+    ],
+
+    "custom/menu": {
+        "format": "",
+        "tooltip": false,
+        "on-click": "fuzzel"
+    },
+    "custom/sep":  { "format": " ", "tooltip": false },
+    "custom/sep2": { "format": " ", "tooltip": false },
+    "custom/sep3": { "format": " ", "tooltip": false },
+
+    "custom/filemanager": {
+        "format": "",
+        "tooltip": "Files",
+        "on-click": "thunar"
+    },
+    "custom/terminal": {
+        "format": "",
+        "tooltip": "Terminal",
+        "on-click": "foot"
+    },
+    "custom/vscode": {
+        "format": "󰨞",
+        "tooltip": "VS Code",
+        "on-click": "code"
+    },
+    "custom/browser": {
+        "format": "",
+        "tooltip": "Browser",
+        "on-click": "xdg-open https://"
+    },
+    "custom/mousepad": {
+        "format": "",
+        "tooltip": "Text Editor",
+        "on-click": "mousepad"
+    },
+    "custom/taskmanager": {
+        "format": "",
+        "tooltip": "Task Manager",
+        "on-click": "foot -e htop"
+    },
+    "custom/settings": {
+        "format": "",
+        "tooltip": "Settings",
+        "on-click": "env XDG_CURRENT_DESKTOP=GNOME gnome-control-center"
+    },
+    "custom/showdesktop": {
+        "format": "",
+        "tooltip": "Show Desktop",
+        "on-click": "labwc --toggle-show-desktop"
+    },
+
+    "wlr/taskbar": {
+        "format": "{icon} {title:.20}",
+        "icon-size": 18,
+        "tooltip": false,
+        "on-click": "activate",
+        "on-click-middle": "close",
+        "ignore-list": []
+    },
+
+    "keyboard-state": {
+        "numlock": false,
+        "capslock": true,
+        "format": "{icon}",
+        "format-icons": {
+            "locked": " CAPS",
+            "unlocked": ""
+        }
+    },
+
+    "tray": {
+        "icon-size": 20,
+        "spacing": 4
+    },
+
+    "pulseaudio": {
+        "format": "{icon} {volume}%",
+        "format-muted": " mute",
+        "format-icons": {
+            "default": ["", "", ""]
+        },
+        "on-click": "pavucontrol",
+        "tooltip": false
+    },
+
+    "clock": {
+        "format": "{:%a %e %b, %H:%M}",
+        "tooltip-format": "<big>{:%Y %B}</big>\n<tt>{calendar}</tt>"
+    }
+}
