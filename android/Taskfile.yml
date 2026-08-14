@@ -3,12 +3,134 @@
 
 version: '3'
 
+vars:
+  # Prebuilt partition images are published as GitHub Release assets. This repo is
+  # personal for now and is expected to move under the t3gemstone organization;
+  # override ANDROID_REPO / ANDROID_RELEASE to pull images from somewhere else.
+  ANDROID_RELEASE: '{{ .ANDROID_RELEASE | default "v11.00.01-t3-gem-o1" }}'
+  ANDROID_REPO: '{{ .ANDROID_REPO | default "mehmetakiferdem/android-t3-gem" }}'
+  ANDROID_DIR: '{{ .WORKDIR }}/build/android'
+  ANDROID_BOARD: 'am67a-{{ .MACHINE }}'
+  # Bootloader source checkout (AOSP tree sibling), see android/README.md step 4.
+  # Override BOOTLOADER_DIR to point at your own checkout, or set the individual
+  # UBOOT_* vars if your layout differs.
+  BOOTLOADER_DIR: '{{ .BOOTLOADER_DIR | default "$HOME/android-t3/bootloader" }}'
+  UBOOT_SRC: '{{ .UBOOT_SRC | default (printf "%s/u-boot" .BOOTLOADER_DIR) }}'
+  UBOOT_TOOLCHAIN: '{{ .UBOOT_TOOLCHAIN | default (printf "%s/toolchains/arm-gnu-toolchain-13.3.rel1-x86_64-aarch64-none-linux-gnu/bin/aarch64-none-linux-gnu-" .BOOTLOADER_DIR) }}'
+  UBOOT_BL31: '{{ .UBOOT_BL31 | default (printf "%s/out/am67a-t3-gem-o1/release/bl31-release.bin" .BOOTLOADER_DIR) }}'
+  UBOOT_TEE: '{{ .UBOOT_TEE | default (printf "%s/out/am67a-t3-gem-o1/release/tee-release.bin" .BOOTLOADER_DIR) }}'
+  UBOOT_TI_DM: '{{ .UBOOT_TI_DM | default "ti-dm/j722s/ipc_echo_testb_mcu1_0_release_strip.xer5f" }}'
+  UBOOT_FW_DIR: '{{ .UBOOT_FW_DIR | default (printf "%s/ti-linux-firmware" .BOOTLOADER_DIR) }}'
+
 tasks:
 
-  fetch:
+  permissions:
+    internal: true
     cmds:
-      - echo todo
+      - sudo mkdir -p {{ .ANDROID_DIR }}
+      - sudo chown $USER:$USER {{ .ANDROID_DIR }}
+      - chmod +x {{ .WORKDIR }}/android/create-image.sh
+
+  fetch:
+    desc: Download Android partition images from GitHub Release
+    cmds:
+      - mkdir -p {{ .ANDROID_DIR }}
+      - |
+        echo "Fetching {{ .ANDROID_RELEASE }} from {{ .ANDROID_REPO }}..."
+        URLS=$(curl -sf "https://api.github.com/repos/{{ .ANDROID_REPO }}/releases/tags/{{ .ANDROID_RELEASE }}" \
+          | python3 -c "import sys,json; [print(a['browser_download_url']) for a in json.load(sys.stdin)['assets']]")
+        if [ -z "$URLS" ]; then
+          echo "ERROR: Release {{ .ANDROID_RELEASE }} not found in {{ .ANDROID_REPO }}"
+          exit 1
+        fi
+        for url in $URLS; do
+          name=$(basename "$url")
+          if [ -f "{{ .ANDROID_DIR }}/$name" ]; then
+            echo "  ✓ $name (exists)"
+          else
+            echo "  ↓ $name"
+            curl -fL -o "{{ .ANDROID_DIR }}/$name" "$url"
+          fi
+        done
+      - echo "Images ready in {{ .ANDROID_DIR }}"
+    requires:
+      vars: [WORKDIR]
 
   build:
+    desc: Create flashable Android disk image via debos (SD card / eMMC)
     cmds:
-      - echo todo
+      - task: permissions
+      - sudo mkdir -p /run/debos
+      - cd /run/debos &&
+          sudo debos
+            --disable-fakemachine
+            --artifactdir={{ .ANDROID_DIR }}
+            --scratchdir={{ .ANDROID_DIR }}
+            --rootdir=/run/debos
+            --template-var="workdir:{{ .WORKDIR }}"
+            --template-var="machine:{{ .ANDROID_BOARD }}"
+            --template-var="release:{{ .ANDROID_RELEASE }}"
+            --template-var="repo:{{ .ANDROID_REPO }}"
+            {{ .WORKDIR }}/android/android.yaml 2>&1 | tee -a {{ .ANDROID_DIR }}/log.txt
+      - sudo chown $USER:$USER {{ .ANDROID_DIR }}/android-{{ .ANDROID_BOARD }}.img || true
+      - sudo chown $USER:$USER {{ .ANDROID_DIR }}/android-{{ .ANDROID_BOARD }}-boot1.img || true
+    generates:
+      - '{{ .ANDROID_DIR }}/android-{{ .ANDROID_BOARD }}.img'
+      - '{{ .ANDROID_DIR }}/android-{{ .ANDROID_BOARD }}-boot1.img'
+    requires:
+      vars:
+        - name: WORKDIR
+        - name: MACHINE
+          enum: [t3-gem-o1]
+
+  uboot:build:
+    desc: >
+      Build A53 U-Boot (tispl.bin + u-boot.img) from the T3 Gem O1 Android
+      U-Boot source and install into build/android/. Runs on the HOST, not
+      inside the distrobox container — needs BL31/OP-TEE/TI-DM binaries and
+      the aarch64 toolchain from the bootloader source checkout
+      (BOOTLOADER_DIR, default ~/android-t3/bootloader), which lives outside
+      this repo. Override BOOTLOADER_DIR or the individual UBOOT_* vars if
+      your layout differs.
+      Does not build tiboot3 (R5 SPL) — that needs a separate
+      arm-none-eabi- toolchain not covered here yet.
+    cmds:
+      - 'test -d {{ .UBOOT_SRC }} || (echo "ERROR: UBOOT_SRC not found: {{ .UBOOT_SRC }}" && exit 1)'
+      - cd {{ .UBOOT_SRC }} && make CROSS_COMPILE={{ .UBOOT_TOOLCHAIN }} am67a_t3_gem_o1_a53_defconfig
+      - cd {{ .UBOOT_SRC }} && BL31={{ .UBOOT_BL31 }} TEE={{ .UBOOT_TEE }} TI_DM={{ .UBOOT_TI_DM }}
+          BINMAN_INDIRS={{ .UBOOT_FW_DIR }}
+          make CROSS_COMPILE={{ .UBOOT_TOOLCHAIN }} -j$(nproc)
+      - mkdir -p {{ .ANDROID_DIR }}
+      - cp {{ .UBOOT_SRC }}/tispl.bin {{ .ANDROID_DIR }}/tispl-{{ .ANDROID_BOARD }}.bin
+      - cp {{ .UBOOT_SRC }}/u-boot.img {{ .ANDROID_DIR }}/u-boot-{{ .ANDROID_BOARD }}.img
+      - echo "Installed tispl-{{ .ANDROID_BOARD }}.bin + u-boot-{{ .ANDROID_BOARD }}.img into {{ .ANDROID_DIR }}"
+    generates:
+      - '{{ .ANDROID_DIR }}/tispl-{{ .ANDROID_BOARD }}.bin'
+      - '{{ .ANDROID_DIR }}/u-boot-{{ .ANDROID_BOARD }}.img'
+    requires:
+      vars:
+        - name: WORKDIR
+        - name: MACHINE
+          enum: [t3-gem-o1]
+
+  flash:
+    desc: Flash Android via DFU + fastboot (board must be in DFU mode)
+    deps: [fetch]
+    cmds:
+      - |
+        if [ ! -f "{{ .ANDROID_DIR }}/flashall.sh" ]; then
+          echo "ERROR: flashall.sh not found in {{ .ANDROID_DIR }}"
+          exit 1
+        fi
+      - chmod +x {{ .ANDROID_DIR }}/flashall.sh
+      - cd {{ .ANDROID_DIR }} && sudo ./flashall.sh --board {{ .ANDROID_BOARD }}
+    requires:
+      vars: [WORKDIR]
+
+  clean:
+    desc: Remove Android build artifacts
+    prompt: Remove all files in {{ .ANDROID_DIR }}?
+    cmds:
+      - rm -rf {{ .ANDROID_DIR }}
+    requires:
+      vars: [WORKDIR]

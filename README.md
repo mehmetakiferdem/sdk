@@ -61,6 +61,19 @@ user@host:$ devbox shell
 🚀 distrobox:workdir> task yocto:runqemu MACHINE=intel-corei7-64 DISTRO_TYPE=desktop DISTRO_BASE=ubuntu DISTRO_SUITE=jammy WORKDIR=$PWD
 ```
 
+##### 5. Build Android image for T3 Gem O1.
+
+```bash
+# Download pre-built Android images and create a flashable SD card image
+🚀 distrobox:workdir> task android:build MACHINE=t3-gem-o1
+
+# Flash to SD card (replace /dev/sdX with your device)
+user@host:$ sudo dd if=build/android/android-am67a-t3-gem-o1.img of=/dev/sdX bs=4M status=progress conv=fsync
+
+# Or flash via DFU + fastboot (board must be in DFU mode)
+🚀 distrobox:workdir> task android:flash MACHINE=t3-gem-o1
+```
+
 ### Screencast
 
 [![asciicast](https://asciinema.org/a/KDwPPlCV2wxzpwDB4sLseW2X9.svg)](https://asciinema.org/a/KDwPPlCV2wxzpwDB4sLseW2X9)

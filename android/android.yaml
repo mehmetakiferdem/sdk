@@ -1,0 +1,47 @@
+{{/* T3 Foundation Gemstone Project https://t3gemstone.org */}}
+{{/* SPDX-License-Identifier Apache-2.0 */}}
+
+{{- $machine    := or .machine    "am67a-t3-gem-o1" -}}
+{{- $release    := or .release    "v11.00.00-t3-gem-o1" -}}
+{{- $repo       := or .repo       "mehmetakiferdem/android-t3-gem" -}}
+{{- $workdir    := or .workdir    "/home/workdir" -}}
+{{- $androiddir := printf "%s/build/android" $workdir -}}
+{{- $image      := printf "android-%s.img" $machine -}}
+
+architecture: arm64
+
+actions:
+
+  - action: run
+    description: Fetch Android partition images from GitHub Release
+    chroot: false
+    command: |
+      set -eu
+      mkdir -p {{ $androiddir }}
+      echo "Fetching {{ $release }} from {{ $repo }}..."
+      URLS=$(curl -sf "https://api.github.com/repos/{{ $repo }}/releases/tags/{{ $release }}" \
+        | python3 -c "import sys,json; [print(a['browser_download_url']) for a in json.load(sys.stdin)['assets']]")
+      if [ -z "$URLS" ]; then
+        echo "ERROR: Release not found: {{ $release }} in {{ $repo }}"
+        exit 1
+      fi
+      for url in $URLS; do
+        name=$(basename "$url")
+        if [ -f "{{ $androiddir }}/$name" ]; then
+          echo "  ✓ $name (cached)"
+        else
+          echo "  ↓ $name"
+          curl -fL --retry 3 -o "{{ $androiddir }}/$name" "$url"
+        fi
+      done
+      echo "All images ready in {{ $androiddir }}"
+
+  - action: run
+    description: Assemble Android disk image
+    chroot: false
+    command: |
+      set -eu
+      bash {{ $workdir }}/android/create-image.sh \
+        {{ $androiddir }} \
+        $ARTIFACTDIR \
+        {{ $machine }}
