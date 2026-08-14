@@ -17,7 +17,8 @@ This guide covers two workflows:
 
 ```bash
 # 1. Clone the SDK and enter the build environment
-git clone https://github.com/mehmetakiferdem/sdk.git
+# Android support currently lives on the android-build branch
+git clone -b android-build https://github.com/mehmetakiferdem/sdk.git
 cd sdk
 devbox shell
 task box

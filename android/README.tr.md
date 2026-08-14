@@ -17,7 +17,8 @@ Bu rehber iki kullanım senaryosunu kapsar:
 
 ```bash
 # 1. SDK'yı indirin ve derleme ortamına girin
-git clone https://github.com/mehmetakiferdem/sdk.git
+# Android desteği şu an android-build dalında bulunuyor
+git clone -b android-build https://github.com/mehmetakiferdem/sdk.git
 cd sdk
 devbox shell
 task box
