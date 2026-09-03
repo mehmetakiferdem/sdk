@@ -8,13 +8,18 @@
 # Output files:
 #   android-<board>.img       → write to SD card (/dev/sdX) or eMMC (/dev/mmcblk0)
 #   android-<board>-boot1.img → write to eMMC boot1 hw partition (/dev/mmcblk0boot1)
+#
+# The optional 4th argument is the image size (default 7G). Growing it only
+# grows userdata — the added space is zeroes, so the xz-compressed image barely
+# changes: 7G -> 16G costs 1.35 MB of download and yields 11.21 GiB of /data.
 
 set -euo pipefail
 export PATH=/usr/sbin:/usr/bin:/sbin:/bin:$PATH
 
-ANDROID_DIR="${1:?Usage: create-image.sh <android_dir> <output_dir> <board>}"
-OUTPUT_DIR="${2:?Usage: create-image.sh <android_dir> <output_dir> <board>}"
+ANDROID_DIR="${1:?Usage: create-image.sh <android_dir> <output_dir> <board> [size]}"
+OUTPUT_DIR="${2:?Usage: create-image.sh <android_dir> <output_dir> <board> [size]}"
 BOARD="${3:-am67a-t3-gem-o1}"
+IMG_SIZE="${4:-7G}"
 
 IMG_FILE="$OUTPUT_DIR/android-$BOARD.img"
 BOOT1_FILE="$OUTPUT_DIR/android-$BOARD-boot1.img"
@@ -36,9 +41,9 @@ echo "Source : $ANDROID_DIR"
 echo "Output : $IMG_FILE"
 echo ""
 
-# ── 7 GiB sparse image ─────────────────────────────────────────────────────
-echo ">>> [1/4] Creating 7 GiB image..."
-truncate -s 7G "$IMG_FILE"
+# ── Sparse image (size from $IMG_SIZE) ─────────────────────────────────────
+echo ">>> [1/4] Creating $IMG_SIZE image..."
+truncate -s "$IMG_SIZE" "$IMG_FILE"
 
 # ── GPT — matches t3-gem-o1.env Android partition layout ────────────────────
 echo ">>> [2/4] Writing GPT partition table..."

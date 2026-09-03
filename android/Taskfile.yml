@@ -10,6 +10,9 @@ vars:
   ANDROID_RELEASE: '{{ .ANDROID_RELEASE | default "v11.00.01-t3-gem-o1" }}'
   ANDROID_REPO: '{{ .ANDROID_REPO | default "mehmetakiferdem/android-t3-gem" }}'
   ANDROID_DIR: '{{ .WORKDIR }}/build/android'
+  # Disk image size. Only userdata grows; the added space is zeroes, so the
+  # xz-compressed image barely changes (7G -> 16G costs ~1.35 MB of download).
+  ANDROID_IMG_SIZE: '{{ .ANDROID_IMG_SIZE | default "7G" }}'
   ANDROID_BOARD: 'am67a-{{ .MACHINE }}'
   # Bootloader source checkout (AOSP tree sibling), see android/README.md step 4.
   # Override BOOTLOADER_DIR to point at your own checkout, or set the individual
@@ -71,6 +74,7 @@ tasks:
             --template-var="machine:{{ .ANDROID_BOARD }}"
             --template-var="release:{{ .ANDROID_RELEASE }}"
             --template-var="repo:{{ .ANDROID_REPO }}"
+            --template-var="imagesize:{{ .ANDROID_IMG_SIZE }}"
             {{ .WORKDIR }}/android/android.yaml 2>&1 | tee -a {{ .ANDROID_DIR }}/log.txt
       - sudo chown $USER:$USER {{ .ANDROID_DIR }}/android-{{ .ANDROID_BOARD }}.img || true
       - sudo chown $USER:$USER {{ .ANDROID_DIR }}/android-{{ .ANDROID_BOARD }}-boot1.img || true

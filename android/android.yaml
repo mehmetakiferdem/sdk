@@ -5,6 +5,7 @@
 {{- $release    := or .release    "v11.00.00-t3-gem-o1" -}}
 {{- $repo       := or .repo       "mehmetakiferdem/android-t3-gem" -}}
 {{- $workdir    := or .workdir    "/home/workdir" -}}
+{{- $imagesize  := or .imagesize  "7G" -}}
 {{- $androiddir := printf "%s/build/android" $workdir -}}
 {{- $image      := printf "android-%s.img" $machine -}}
 
@@ -44,4 +45,5 @@ actions:
       bash {{ $workdir }}/android/create-image.sh \
         {{ $androiddir }} \
         $ARTIFACTDIR \
-        {{ $machine }}
+        {{ $machine }} \
+        {{ $imagesize }}
