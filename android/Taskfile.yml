@@ -96,7 +96,7 @@ tasks:
       arm-none-eabi- toolchain not covered here yet.
     cmds:
       - 'test -d {{ .UBOOT_SRC }} || (echo "ERROR: UBOOT_SRC not found: {{ .UBOOT_SRC }}" && exit 1)'
-      - cd {{ .UBOOT_SRC }} && make CROSS_COMPILE={{ .UBOOT_TOOLCHAIN }} am67a_t3_gem_o1_a53_defconfig
+      - cd {{ .UBOOT_SRC }} && make CROSS_COMPILE={{ .UBOOT_TOOLCHAIN }} am67a_t3_gem_o1_a53_android_defconfig
       - cd {{ .UBOOT_SRC }} && BL31={{ .UBOOT_BL31 }} TEE={{ .UBOOT_TEE }} TI_DM={{ .UBOOT_TI_DM }}
           BINMAN_INDIRS={{ .UBOOT_FW_DIR }}
           make CROSS_COMPILE={{ .UBOOT_TOOLCHAIN }} -j$(nproc)
