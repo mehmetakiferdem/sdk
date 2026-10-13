@@ -20,40 +20,13 @@ jobs:
     permissions:
       contents: write
     strategy:
-      fail-fast: true
+      fail-fast: false
       matrix:
-        machine: [beagley-ai, t3-gem-o1, intel-corei7-64]
-        base:    [ubuntu, debian, pardus]
-        suite:   [jammy, bookworm, yirmiuc, yirmibes, noble]
-        type:    [minimal, kiosk, desktop]
-        exclude:
-          - base: ubuntu
-            suite: yirmiuc
-          - base: ubuntu
-            suite: yirmibes
-          - base: ubuntu
-            suite: bookworm
-          - base: pardus
-            suite: jammy
-          - base: pardus
-            suite: bookworm
-          - base: pardus
-            suite: noble
-          - base: debian
-            suite: yirmiuc
-          - base: debian
-            suite: yirmibes
-          - base: debian
-            suite: jammy
-          - base: debian
-            suite: noble
-        include:
-          - machine: beagley-ai
-            arch: arm64
-          - machine: t3-gem-o1
-            arch: arm64
-          - machine: intel-corei7-64
-            arch: amd64
+        machine: [t3-gem-o1]
+        base:    [ubuntu]
+        suite:   [jammy]
+        type:    [minimal, desktop]
+        arch:    [arm64]
     steps:
       - name: Checkout
         uses: actions/checkout@v4
