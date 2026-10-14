@@ -108,6 +108,11 @@ RUN apt-get install -y \
         systemd-container \
         ubuntu-keyring
 
+# Android image tools (simg2img, mtools for FAT images)
+RUN apt-get install -y \
+        android-sdk-libsparse-utils \
+        mtools
+
 # Debos
 RUN cd /tmp && \
     export GOPATH=/tmp/debos && \
