@@ -99,7 +99,8 @@ EOF
     sed -i '/userpasswd=/d' $configfile
     sed -i '/wifiname=/d' $configfile
     sed -i '/wifipasswd=/d' $configfile
-    sed -i '/vncpasswd=/d' $configfile
+    sed -i '/vncpassword=/d' $configfile
+    sed -i '/diskpasswd=/d' $configfile
 fi
 
 systemctl disable gem-first-boot.service
