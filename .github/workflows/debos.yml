@@ -25,7 +25,7 @@ jobs:
         machine: [t3-gem-o1]
         base:    [ubuntu, debian, pardus]
         suite:   [jammy, bookworm, yirmiuc, yirmibes, noble]
-        type:    [minimal, kiosk, desktop]
+        type:    [minimal, desktop]
         exclude:
           - base: ubuntu
             suite: yirmiuc
