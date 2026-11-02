@@ -67,22 +67,28 @@ method=auto
 EOF
             chmod 0600 "$wifi_conf_file"
 
-            # NetworkManager hands iwd the psk as a passphrase, which can be at
-            # most 63 characters, so iwd rejects a 64-digit PSK derived from it.
-            # Give iwd the PSK itself, in its own profile for the network; iwd
-            # names that file after the SSID, or its hex digits after "=" when
-            # the SSID has characters other than letters, digits, " ", "-", "_".
+            # NetworkManager leaves connecting to iwd here, and iwd only joins
+            # networks it has a profile for, so give it one: with only the
+            # NetworkManager profile the board never connected on its own.
+            # iwd also takes a 64-digit PSK from there, which it rejects when
+            # NetworkManager hands it over as a passphrase. iwd names the file
+            # after the SSID, or its hex digits after "=" when the SSID has
+            # characters other than letters, digits, " ", "-" and "_".
             # Character ranges follow the locale; compare them in C.
-            if LC_ALL=C grep -qxE '[0-9a-fA-F]{64}' <<< "$wifipasswd"; then
-                if LC_ALL=C grep -qxE '[A-Za-z0-9 _-]+' <<< "$wifiname"; then
-                    iwd_name=$wifiname
-                else
-                    iwd_name="=$(printf %s "$wifiname" | od -An -tx1 | tr -d ' \n')"
-                fi
-                mkdir -p -m 0700 /var/lib/iwd
-                printf '[Security]\nPreSharedKey=%s\n' "$wifipasswd" > "/var/lib/iwd/$iwd_name.psk"
-                chmod 0600 "/var/lib/iwd/$iwd_name.psk"
+            if LC_ALL=C grep -qxE '[A-Za-z0-9 _-]+' <<< "$wifiname"; then
+                iwd_name=$wifiname
+            else
+                iwd_name="=$(printf %s "$wifiname" | od -An -tx1 | tr -d ' \n')"
             fi
+            if LC_ALL=C grep -qxE '[0-9a-fA-F]{64}' <<< "$wifipasswd"; then
+                iwd_key="PreSharedKey=$wifipasswd"
+            else
+                # iwd's settings files escape "\" and a leading space
+                iwd_key="Passphrase=$(printf %s "$wifipasswd" | sed 's/\\/\\\\/g; s/^ /\\s/')"
+            fi
+            mkdir -p -m 0700 /var/lib/iwd
+            printf '[Security]\n%s\n' "$iwd_key" > "/var/lib/iwd/$iwd_name.psk"
+            chmod 0600 "/var/lib/iwd/$iwd_name.psk"
         fi
 
         if [ -n "$wificountry" ]; then
