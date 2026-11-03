@@ -14,9 +14,11 @@ if [ -f /etc/NetworkManager/system-connections/eth0-dhcp.nmconnection ]; then
 fi
 
 # Networkmanager does not allow bad permission
-if [ -f /etc/NetworkManager/system-connections/usb0.nmconnection ]; then
-    chmod 0600 /etc/NetworkManager/system-connections/usb0.nmconnection
-fi
+for conn in usb0 usb1; do
+    if [ -f /etc/NetworkManager/system-connections/$conn.nmconnection ]; then
+        chmod 0600 /etc/NetworkManager/system-connections/$conn.nmconnection
+    fi
+done
 
 # Network management
 systemctl enable NetworkManager

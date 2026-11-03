@@ -1,1 +1,1 @@
-ACTION=="add|change", SUBSYSTEM=="net", KERNEL=="usb0", ENV{NM_UNMANAGED}=""
+ACTION=="add|change", SUBSYSTEM=="net", KERNEL=="usb[01]", ENV{NM_UNMANAGED}=""

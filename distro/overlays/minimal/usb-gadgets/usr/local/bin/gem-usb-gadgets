@@ -13,13 +13,17 @@ G_MULTI_DIR="/sys/kernel/config/usb_gadget/g_multi"
 
 USB_VID="0x1d6b"
 USB_PID="0x0104"
-# Bumped from 0x0404 when the composite interface layout changed, so that hosts
-# re-evaluate the device instead of reusing cached per-interface driver bindings.
-USB_BCDDEVICE="0x0405"
+# Bumped whenever the composite interface layout changes (0x0404 -> 0x0405 for
+# RNDIS first, 0x0406 for NCM), so that hosts re-evaluate the device instead of
+# reusing cached per-interface driver bindings.
+USB_BCDDEVICE="0x0406"
 USB_BCDUSB="0x0200"
 
 ETH_HOST_MAC_ADDR="02:12:34:56:78:9A"
 ETH_DEV_MAC_ADDR="06:AB:CD:EF:12:34"
+
+NCM_HOST_MAC_ADDR="02:12:34:56:78:9B"
+NCM_DEV_MAC_ADDR="06:AB:CD:EF:12:35"
 
 function enable_usb_serial()
 {
@@ -52,6 +56,17 @@ function enable_usb_ethernet()
     echo 1 > functions/rndis.usb0/os_desc/interface.rndis/Label/type
     echo "Gemstone USB Ethernet" > functions/rndis.usb0/os_desc/interface.rndis/Label/data
     ln -s functions/rndis.usb0 configs/c.1/
+}
+
+# macOS has no RNDIS driver, so USB networking needs a second, standard CDC
+# interface there: NCM, which macOS and Linux drive out of the box. It comes
+# up on the board as usb1, next to RNDIS on usb0.
+function enable_usb_ncm()
+{
+    mkdir -p functions/ncm.usb0
+    echo "$NCM_HOST_MAC_ADDR" > functions/ncm.usb0/host_addr
+    echo "$NCM_DEV_MAC_ADDR" > functions/ncm.usb0/dev_addr
+    ln -s functions/ncm.usb0 configs/c.1/
 }
 
 function enable_mass_storage()
@@ -144,6 +159,7 @@ function run()
     # otherwise. Matches the function order of the reference bb-usb-gadgets
     # script this file is based on.
     enable_usb_ethernet
+    enable_usb_ncm
     enable_usb_serial
     enable_mass_storage
 

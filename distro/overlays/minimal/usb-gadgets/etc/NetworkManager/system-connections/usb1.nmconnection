@@ -1,0 +1,17 @@
+[connection]
+id=usb1
+uuid=43b9f619-a985-4fe8-aebd-0bd7738ffb01
+type=ethernet
+interface-name=usb1
+
+[ethernet]
+
+[ipv4]
+address1=192.168.6.2/24
+method=shared
+
+[ipv6]
+addr-gen-mode=stable-privacy
+method=disabled
+
+[proxy]
