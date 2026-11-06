@@ -11,20 +11,12 @@ if [ "$EUID" -ne 0 ]; then
     exit
 fi
 
-list=(
-    "sys-kernel-debug.mount"
-    "sys-kernel-tracing.mount"
-    "apt-daily.service"
-    "apt-daily.timer"
-    "apt-daily-upgrade.service"
-    "apt-daily-upgrade.timer"
-    "dpkg-db-backup.timer"
-)
-
-for i in "${list[@]}"; do
-    systemctl stop "$i"
-    systemctl disable "$i"
-done
+# One call each: a call per unit makes systemd reload its units every time
+# while NetworkManager is starting, and stopping a service before the timer
+# that triggers it makes systemctl warn.
+systemctl disable --now apt-daily.timer apt-daily-upgrade.timer dpkg-db-backup.timer
+systemctl stop apt-daily.service apt-daily-upgrade.service \
+    sys-kernel-debug.mount sys-kernel-tracing.mount
 
 configfile="/boot/config.ini"
 
